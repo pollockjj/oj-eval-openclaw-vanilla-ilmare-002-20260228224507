@@ -19,7 +19,24 @@
 
 namespace sjtu {
 class int2048 {
-  // todo
+private:
+  static const int BASE = 1000;
+  static const int BASE_DIGITS = 3;
+
+  // sign_: 1 (positive), -1 (negative), 0 (zero)
+  int sign_;
+  std::vector<int> a_; // little-endian digits in BASE
+
+  void trim();
+  static int abs_compare(const int2048 &, const int2048 &);
+  static std::vector<int> abs_add_vec(const std::vector<int> &, const std::vector<int> &);
+  static std::vector<int> abs_sub_vec(const std::vector<int> &, const std::vector<int> &); // assume lhs >= rhs
+  static std::vector<int> multiply_schoolbook(const std::vector<int> &, const std::vector<int> &);
+  static std::vector<int> multiply_fft(const std::vector<int> &, const std::vector<int> &);
+  static void fft(std::vector<std::complex<double>> &, bool);
+
+  static void divmod_abs(const int2048 &x, const int2048 &y, int2048 &q, int2048 &r);
+
 public:
   // Constructors
   int2048();
