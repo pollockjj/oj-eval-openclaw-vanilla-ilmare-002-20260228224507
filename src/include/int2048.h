@@ -20,8 +20,8 @@
 namespace sjtu {
 class int2048 {
 private:
-  static const int BASE = 100000;
-  static const int BASE_DIGITS = 5;
+  static const int BASE = 10000;
+  static const int BASE_DIGITS = 4;
 
   // sign_: 1 (positive), -1 (negative), 0 (zero)
   int sign_;

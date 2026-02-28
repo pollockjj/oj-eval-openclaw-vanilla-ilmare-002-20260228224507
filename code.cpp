@@ -20,8 +20,8 @@
 namespace sjtu {
 class int2048 {
 private:
-  static const int BASE = 100000;
-  static const int BASE_DIGITS = 5;
+  static const int BASE = 10000;
+  static const int BASE_DIGITS = 4;
 
   // sign_: 1 (positive), -1 (negative), 0 (zero)
   int sign_;
@@ -108,7 +108,7 @@ namespace sjtu {
 
 namespace {
 
-const int LOCAL_BASE = 100000;
+const int LOCAL_BASE = 10000;
 
 std::vector<int> mul_vec_int(const std::vector<int> &a, int m) {
   if (m == 0 || a.empty())
@@ -363,9 +363,30 @@ void int2048::divmod_abs(const int2048 &x, const int2048 &y, int2048 &q, int2048
   q.sign_ = 1;
 
   const int n = int(a.a_.size());
+  const int bsz = int(b.a_.size());
   std::vector<int> rv(n + 2, 0); // little-endian remainder window buffer
+  std::vector<int> bd(bsz + 2, 0);
   int head = n + 1;
   int len = 0;
+
+  auto build_bd = [&](int d) -> int {
+    if (d == 0)
+      return 0;
+    long long carry = 0;
+    for (int k = 0; k < bsz; ++k) {
+      long long cur = 1ll * b.a_[k] * d + carry;
+      bd[k] = int(cur % BASE);
+      carry = cur / BASE;
+    }
+    int bd_len = bsz;
+    while (carry) {
+      bd[bd_len++] = int(carry % BASE);
+      carry /= BASE;
+    }
+    while (bd_len > 0 && bd[bd_len - 1] == 0)
+      --bd_len;
+    return bd_len;
+  };
 
   for (int i = n - 1; i >= 0; --i) {
     // r = r * BASE + a[i]
@@ -380,34 +401,33 @@ void int2048::divmod_abs(const int2048 &x, const int2048 &y, int2048 &q, int2048
     while (len > 0 && rv[head + len - 1] == 0)
       --len;
 
-    int bsz = int(b.a_.size());
     int s1 = (len <= bsz) ? 0 : rv[head + bsz];
     int s2 = (len <= bsz - 1) ? 0 : rv[head + bsz - 1];
-    long long d = (1ll * BASE * s1 + s2) / b.a_.back();
+    int d = int((1ll * BASE * s1 + s2) / b.a_.back());
     if (d >= BASE)
       d = BASE - 1;
 
-    std::vector<int> bd = mul_vec_int(b.a_, int(d));
+    int bd_len = build_bd(d);
 
-    auto cmp_r_bd = [&](const std::vector<int> &rhs) -> int {
-      if (len != int(rhs.size()))
-        return len < int(rhs.size()) ? -1 : 1;
+    auto cmp_r_bd = [&](int rhs_len) -> int {
+      if (len != rhs_len)
+        return len < rhs_len ? -1 : 1;
       for (int k = len - 1; k >= 0; --k) {
         int lv = rv[head + k];
-        int rvv = rhs[k];
+        int rvv = bd[k];
         if (lv != rvv)
           return lv < rvv ? -1 : 1;
       }
       return 0;
     };
 
-    while (cmp_r_bd(bd) < 0) {
+    while (cmp_r_bd(bd_len) < 0) {
       --d;
-      bd = abs_sub_vec(bd, b.a_);
+      bd_len = build_bd(d);
     }
 
     int carry = 0;
-    for (int k = 0; k < int(bd.size()); ++k) {
+    for (int k = 0; k < bd_len; ++k) {
       int cur = rv[head + k] - bd[k] - carry;
       if (cur < 0) {
         cur += BASE;
@@ -417,7 +437,7 @@ void int2048::divmod_abs(const int2048 &x, const int2048 &y, int2048 &q, int2048
       }
       rv[head + k] = cur;
     }
-    for (int k = int(bd.size()); carry && k < len; ++k) {
+    for (int k = bd_len; carry && k < len; ++k) {
       int cur = rv[head + k] - carry;
       if (cur < 0) {
         rv[head + k] = cur + BASE;
@@ -431,7 +451,7 @@ void int2048::divmod_abs(const int2048 &x, const int2048 &y, int2048 &q, int2048
     while (len > 0 && rv[head + len - 1] == 0)
       --len;
 
-    q.a_[i] = int(d);
+    q.a_[i] = d;
   }
 
   q.trim();
