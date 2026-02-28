@@ -20,8 +20,8 @@
 namespace sjtu {
 class int2048 {
 private:
-  static const int BASE = 10000;
-  static const int BASE_DIGITS = 4;
+  static const int BASE = 100000;
+  static const int BASE_DIGITS = 5;
 
   // sign_: 1 (positive), -1 (negative), 0 (zero)
   int sign_;
@@ -108,7 +108,7 @@ namespace sjtu {
 
 namespace {
 
-const int LOCAL_BASE = 10000;
+const int LOCAL_BASE = 100000;
 
 std::vector<int> mul_vec_int(const std::vector<int> &a, int m) {
   if (m == 0 || a.empty())

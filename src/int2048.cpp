@@ -4,7 +4,7 @@ namespace sjtu {
 
 namespace {
 
-const int LOCAL_BASE = 10000;
+const int LOCAL_BASE = 100000;
 
 std::vector<int> mul_vec_int(const std::vector<int> &a, int m) {
   if (m == 0 || a.empty())
