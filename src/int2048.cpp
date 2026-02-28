@@ -257,34 +257,86 @@ void int2048::divmod_abs(const int2048 &x, const int2048 &y, int2048 &q, int2048
 
   q.a_.assign(a.a_.size(), 0);
   q.sign_ = 1;
-  r = 0;
 
-  for (int i = int(a.a_.size()) - 1; i >= 0; --i) {
-    if (r.a_.empty())
-      r.a_.push_back(a.a_[i]);
-    else
-      r.a_.insert(r.a_.begin(), a.a_[i]);
-    r.sign_ = 1;
-    r.trim();
+  const int n = int(a.a_.size());
+  std::vector<int> rv(n + 2, 0); // little-endian remainder window buffer
+  int head = n + 1;
+  int len = 0;
 
-    int s1 = int(r.a_.size()) <= int(b.a_.size()) ? 0 : r.a_[b.a_.size()];
-    int s2 = int(r.a_.size()) <= int(b.a_.size()) - 1 ? 0 : r.a_[b.a_.size() - 1];
+  for (int i = n - 1; i >= 0; --i) {
+    // r = r * BASE + a[i]
+    if (len == 0) {
+      rv[head] = a.a_[i];
+      len = 1;
+    } else {
+      --head;
+      rv[head] = a.a_[i];
+      ++len;
+    }
+    while (len > 0 && rv[head + len - 1] == 0)
+      --len;
+
+    int bsz = int(b.a_.size());
+    int s1 = (len <= bsz) ? 0 : rv[head + bsz];
+    int s2 = (len <= bsz - 1) ? 0 : rv[head + bsz - 1];
     long long d = (1ll * BASE * s1 + s2) / b.a_.back();
     if (d >= BASE)
       d = BASE - 1;
 
     std::vector<int> bd = mul_vec_int(b.a_, int(d));
-    while (cmp_vec_abs(r.a_, bd) < 0) {
+
+    auto cmp_r_bd = [&](const std::vector<int> &rhs) -> int {
+      if (len != int(rhs.size()))
+        return len < int(rhs.size()) ? -1 : 1;
+      for (int k = len - 1; k >= 0; --k) {
+        int lv = rv[head + k];
+        int rvv = rhs[k];
+        if (lv != rvv)
+          return lv < rvv ? -1 : 1;
+      }
+      return 0;
+    };
+
+    while (cmp_r_bd(bd) < 0) {
       --d;
       bd = abs_sub_vec(bd, b.a_);
     }
 
-    r.a_ = abs_sub_vec(r.a_, bd);
-    r.sign_ = r.a_.empty() ? 0 : 1;
+    int carry = 0;
+    for (int k = 0; k < int(bd.size()); ++k) {
+      int cur = rv[head + k] - bd[k] - carry;
+      if (cur < 0) {
+        cur += BASE;
+        carry = 1;
+      } else {
+        carry = 0;
+      }
+      rv[head + k] = cur;
+    }
+    for (int k = int(bd.size()); carry && k < len; ++k) {
+      int cur = rv[head + k] - carry;
+      if (cur < 0) {
+        rv[head + k] = cur + BASE;
+        carry = 1;
+      } else {
+        rv[head + k] = cur;
+        carry = 0;
+      }
+    }
+
+    while (len > 0 && rv[head + len - 1] == 0)
+      --len;
+
     q.a_[i] = int(d);
   }
 
   q.trim();
+  r.a_.clear();
+  if (len > 0) {
+    r.a_.reserve(len);
+    for (int i = 0; i < len; ++i)
+      r.a_.push_back(rv[head + i]);
+  }
   if (norm != 1)
     div_vec_int_inplace(r.a_, norm);
   r.sign_ = r.a_.empty() ? 0 : 1;
