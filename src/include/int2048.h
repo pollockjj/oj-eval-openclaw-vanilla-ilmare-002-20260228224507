@@ -20,8 +20,8 @@
 namespace sjtu {
 class int2048 {
 private:
-  static const int BASE = 1000;
-  static const int BASE_DIGITS = 3;
+  static const int BASE = 10000;
+  static const int BASE_DIGITS = 4;
 
   // sign_: 1 (positive), -1 (negative), 0 (zero)
   int sign_;
@@ -33,7 +33,7 @@ private:
   static std::vector<int> abs_sub_vec(const std::vector<int> &, const std::vector<int> &); // assume lhs >= rhs
   static std::vector<int> multiply_schoolbook(const std::vector<int> &, const std::vector<int> &);
   static std::vector<int> multiply_fft(const std::vector<int> &, const std::vector<int> &);
-  static void fft(std::vector<std::complex<double>> &, bool);
+  static void fft(std::vector<std::complex<long double>> &, bool);
 
   static void divmod_abs(const int2048 &x, const int2048 &y, int2048 &q, int2048 &r);
 

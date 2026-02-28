@@ -4,7 +4,7 @@ namespace sjtu {
 
 namespace {
 
-const int LOCAL_BASE = 1000;
+const int LOCAL_BASE = 10000;
 
 std::vector<int> mul_vec_int(const std::vector<int> &a, int m) {
   if (m == 0 || a.empty())
@@ -130,7 +130,7 @@ std::vector<int> int2048::abs_sub_vec(const std::vector<int> &lhs, const std::ve
   return res;
 }
 
-void int2048::fft(std::vector<std::complex<double>> &a, bool invert) {
+void int2048::fft(std::vector<std::complex<long double>> &a, bool invert) {
   int n = int(a.size());
   for (int i = 1, j = 0; i < n; ++i) {
     int bit = n >> 1;
@@ -138,22 +138,22 @@ void int2048::fft(std::vector<std::complex<double>> &a, bool invert) {
       j ^= bit;
     j ^= bit;
     if (i < j) {
-      std::complex<double> tmp = a[i];
+      std::complex<long double> tmp = a[i];
       a[i] = a[j];
       a[j] = tmp;
     }
   }
 
-  const double PI = 3.141592653589793238462643383279502884;
+  const long double PI = 3.141592653589793238462643383279502884L;
   for (int len = 2; len <= n; len <<= 1) {
-    double ang = 2.0 * PI / len * (invert ? -1.0 : 1.0);
-    std::complex<double> wlen = std::polar(1.0, ang);
+    long double ang = 2.0L * PI / len * (invert ? -1.0L : 1.0L);
+    std::complex<long double> wlen = std::polar(1.0L, ang);
     for (int i = 0; i < n; i += len) {
-      std::complex<double> w(1.0, 0.0);
+      std::complex<long double> w(1.0L, 0.0L);
       int half = len >> 1;
       for (int j = 0; j < half; ++j) {
-        std::complex<double> u = a[i + j];
-        std::complex<double> v = a[i + j + half] * w;
+        std::complex<long double> u = a[i + j];
+        std::complex<long double> v = a[i + j + half] * w;
         a[i + j] = u + v;
         a[i + j + half] = u - v;
         w *= wlen;
@@ -194,11 +194,11 @@ std::vector<int> int2048::multiply_fft(const std::vector<int> &lhs, const std::v
   while (n < lhs.size() + rhs.size())
     n <<= 1;
 
-  std::vector<std::complex<double>> fa(n), fb(n);
+  std::vector<std::complex<long double>> fa(n), fb(n);
   for (std::size_t i = 0; i < lhs.size(); ++i)
-    fa[i] = std::complex<double>(lhs[i], 0.0);
+    fa[i] = std::complex<long double>(lhs[i], 0.0L);
   for (std::size_t i = 0; i < rhs.size(); ++i)
-    fb[i] = std::complex<double>(rhs[i], 0.0);
+    fb[i] = std::complex<long double>(rhs[i], 0.0L);
 
   fft(fa, false);
   fft(fb, false);
